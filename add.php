@@ -21,7 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Agregar Libro</title></head>
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Libro</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
 <body>
     <h1>➕ Agregar Libro</h1>
     <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>

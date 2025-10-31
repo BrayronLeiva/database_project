@@ -36,7 +36,11 @@ if (!$book) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Editar Libro</title></head>
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Libro</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
 <body>
     <h1>✏️ Editar Libro</h1>
     <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
