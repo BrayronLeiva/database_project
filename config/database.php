@@ -1,14 +1,10 @@
 <?php
-$dbFile = __DIR__ . '/../data/database.sqlite';
-
-if (!file_exists($dbFile)) {
-    // Evitar uso directo sin instalación
-    die("Base de datos no encontrada. Ve a install.php para instalar.");
-}
-
+// Conexión PDO a SQLite
+$dbPath = __DIR__ . '/../data/database.sqlite';
 try {
-    $pdo = new PDO("sqlite:" . $dbFile);
+    $pdo = new PDO('sqlite:' . $dbPath);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (Throwable $e) {
-    die("Error de conexión: " . htmlspecialchars($e->getMessage()));
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die('Error de conexión: ' . $e->getMessage());
 }
