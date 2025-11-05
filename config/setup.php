@@ -46,10 +46,36 @@ function seedAdmin(PDO $pdo): void {
 }
 
 function seedSampleData(PDO $pdo): void {
-    $count = (int)$pdo->query("SELECT COUNT(*) FROM books")->fetchColumn();
-    if ($count === 0) {
-        $ins = $pdo->prepare("INSERT INTO books (title, author, year, genre) VALUES (?, ?, ?, ?)");
-        $ins->execute(["Cien Años de Soledad", "Gabriel García Márquez", 1967, "Novela"]);
-        $ins->execute(["El señor de los anillos", "J.R.R. Tolkien", 1954, "Fantasía"]);
+    $books = [
+        ['title' => 'El Quijote', 'author' => 'Miguel de Cervantes', 'year' => 1605, 'genre' => 'Novela de Aventuras'],
+        ['title' => '1984', 'author' => 'George Orwell', 'year' => 1949, 'genre' => 'Distopía'],
+        ['title' => 'Cien años de soledad', 'author' => 'Gabriel García Márquez', 'year' => 1967, 'genre' => 'Realismo Mágico'],
+        ['title' => 'El Gran Gatsby', 'author' => 'F. Scott Fitzgerald', 'year' => 1925, 'genre' => 'Novela Romántica'],
+        ['title' => 'Mujercitas', 'author' => 'Louisa May Alcott', 'year' => 1868, 'genre' => 'Drama Familiar'],
+        ['title' => 'Dune', 'author' => 'Frank Herbert', 'year' => 1965, 'genre' => 'Ciencia Ficción'],
+        ['title' => 'El Hobbit', 'author' => 'J.R.R. Tolkien', 'year' => 1937, 'genre' => 'Fantasía Épica'],
+        ['title' => 'Orgullo y Prejuicio', 'author' => 'Jane Austen', 'year' => 1813, 'genre' => 'Romance Clásico'],
+        ['title' => 'Crimen y Castigo', 'author' => 'Fiódor Dostoievski', 'year' => 1866, 'genre' => 'Psicológica'],
+        ['title' => 'La Revolución Francesa', 'author' => 'Charles Dickens', 'year' => 1859, 'genre' => 'Novela Histórica'],
+        ['title' => 'Frankenstein', 'author' => 'Mary Shelley', 'year' => 1818, 'genre' => 'Terror Gótico'],
+        ['title' => 'El Código Da Vinci', 'author' => 'Dan Brown', 'year' => 2003, 'genre' => 'Misterio Thriller'],
+        ['title' => 'Metamorfosis', 'author' => 'Franz Kafka', 'year' => 1915, 'genre' => 'Novela Existencial'],
+        ['title' => 'La Bruja de Portobello', 'author' => 'Paulo Coelho', 'year' => 2006, 'genre' => 'Espiritualidad'],
+        ['title' => 'El Nombre del Viento', 'author' => 'Patrick Rothfuss', 'year' => 2007, 'genre' => 'Fantasía Contemporánea'],
+    ];
+
+    try {
+        $stmt = $pdo->prepare('INSERT INTO books (title, author, year, genre) VALUES (?, ?, ?, ?)');
+        
+        foreach ($books as $book) {
+            $stmt->execute([
+                $book['title'],
+                $book['author'],
+                $book['year'],
+                $book['genre']
+            ]);
+        }
+    } catch (PDOException $e) {
+        error_log("Error seeding sample data: " . $e->getMessage());
     }
 }
