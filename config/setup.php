@@ -1,4 +1,5 @@
 <?php
+// Crea la carpeta de datos si no existe
 function ensureDirectories(string $dataDir): void {
     if (!is_dir($dataDir)) {
         // 0755 es suficiente para lectura del servidor web local
@@ -6,14 +7,16 @@ function ensureDirectories(string $dataDir): void {
     }
 }
 
+// Establece conexión a la base de datos SQLite y configura manejo de errores
 function createDatabase(string $dbFile): PDO {
     $pdo = new PDO("sqlite:" . $dbFile);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     return $pdo;
 }
 
+// Crea las tablas: books (libros) y users (usuarios)
 function createTables(PDO $pdo): void {
-    // Tabla books
+    // Tabla books: almacena información de libros
     $pdo->exec("CREATE TABLE IF NOT EXISTS books (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
@@ -23,7 +26,7 @@ function createTables(PDO $pdo): void {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // Tabla users
+    // Tabla users: almacena usuarios con contraseña hasheada
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -33,11 +36,13 @@ function createTables(PDO $pdo): void {
     )");
 }
 
+// Inserta un usuario administrador por defecto (admin / clave123)
 function seedAdmin(PDO $pdo): void {
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
     $stmt->execute(['admin']);
     $exists = (int)$stmt->fetchColumn();
 
+    // Solo crea el admin si no existe
     if ($exists === 0) {
         $hash = password_hash("clave123", PASSWORD_DEFAULT);
         $ins = $pdo->prepare("INSERT INTO users (username, password, email) VALUES (?, ?, ?)");
@@ -45,6 +50,7 @@ function seedAdmin(PDO $pdo): void {
     }
 }
 
+// Popula la tabla books con 15 libros de ejemplo (clásicos literarios)
 function seedSampleData(PDO $pdo): void {
     $books = [
         ['title' => 'El Quijote', 'author' => 'Miguel de Cervantes', 'year' => 1605, 'genre' => 'Novela de Aventuras'],
@@ -76,6 +82,7 @@ function seedSampleData(PDO $pdo): void {
             ]);
         }
     } catch (PDOException $e) {
+        // Registra errores sin detener la ejecución
         error_log("Error seeding sample data: " . $e->getMessage());
     }
 }

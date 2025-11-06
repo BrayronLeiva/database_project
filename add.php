@@ -6,9 +6,11 @@ if (!file_exists($dbFile)) {
     exit;
 }
 
+// Carga la conexión a la BD y la clase Book
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Book.php';
 
+// Inicializa la clase Book y las variables del formulario
 $bookModel = new Book($pdo);
 $errors = [];
 $success = false;
@@ -17,14 +19,15 @@ $author = '';
 $year = '';
 $genre = '';
 
-// Procesar formulario
+// Procesa el formulario cuando se envía por POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Obtiene y limpia los datos del formulario
     $title = trim($_POST['title'] ?? '');
     $author = trim($_POST['author'] ?? '');
     $year = isset($_POST['year']) && $_POST['year'] !== '' ? (int)$_POST['year'] : null;
     $genre = trim($_POST['genre'] ?? '');
 
-    // Validaciones de servidor
+    // Validaciones de servidor para el título
     if (empty($title)) {
         $errors[] = 'El título es obligatorio.';
     } elseif (strlen($title) < 3) {
@@ -33,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'El título no puede exceder 255 caracteres.';
     }
 
+    // Validaciones de servidor para el autor
     if (empty($author)) {
         $errors[] = 'El autor es obligatorio.';
     } elseif (strlen($author) < 3) {
@@ -41,20 +45,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'El autor no puede exceder 255 caracteres.';
     }
 
+    // Validación del año (opcional pero con rango límite)
     if ($year !== null && ($year < 1000 || $year > date('Y') + 10)) {
         $errors[] = 'El año debe estar entre 1000 y ' . (date('Y') + 10) . '.';
     }
 
+    // Validación del género (opcional pero con límite de caracteres)
     if (!empty($genre) && strlen($genre) > 100) {
         $errors[] = 'El género no puede exceder 100 caracteres.';
     }
 
-    // Si no hay errores, guardar el libro
+    // Si no hay errores, intenta guardar el libro en la BD
     if (empty($errors)) {
         try {
             if ($bookModel->add($title, $author, $year, $genre ?: null)) {
                 $success = true;
-                // Limpiar formulario después de guardar exitosamente
+                // Limpia el formulario después de guardar exitosamente
                 $title = '';
                 $author = '';
                 $year = '';
@@ -67,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -83,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h1>➕ Agregar Nuevo Libro</h1>
         </div>
 
-        <!-- Mensajes de éxito -->
+        <!-- Muestra mensaje de éxito si el libro se guardó correctamente -->
         <?php if ($success): ?>
         <div class="alert alert-success">
             ✅ ¡Libro agregado exitosamente! 
@@ -91,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <?php endif; ?>
 
-        <!-- Mensajes de error del servidor -->
+        <!-- Muestra lista de errores si hay validaciones fallidas -->
         <?php if (!empty($errors)): ?>
         <div class="alert alert-danger">
             <strong>❌ Error(es) encontrado(s):</strong>
@@ -103,8 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <?php endif; ?>
 
-        <!-- Formulario -->
+        <!-- Formulario con validación HTML5 (novalidate permite JS personalizado) -->
         <form method="POST" class="book-form" id="bookForm" novalidate>
+            <!-- Campo: Título (obligatorio) -->
             <div class="form-group">
                 <label for="title">Título del Libro *</label>
                 <input 
@@ -123,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <small class="form-text form-error" id="title-error"></small>
             </div>
 
+            <!-- Campo: Autor (obligatorio) -->
             <div class="form-group">
                 <label for="author">Autor *</label>
                 <input 
@@ -141,7 +150,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <small class="form-text form-error" id="author-error"></small>
             </div>
 
+            <!-- Fila con dos campos: Año y Género -->
             <div class="form-row">
+                <!-- Campo: Año de Publicación (opcional) -->
                 <div class="form-group">
                     <label for="year">Año de Publicación</label>
                     <input 
@@ -159,6 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <small class="form-text form-error" id="year-error"></small>
                 </div>
 
+                <!-- Campo: Género (opcional) -->
                 <div class="form-group">
                     <label for="genre">Género</label>
                     <input 
@@ -176,25 +188,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
+            <!-- Botones de acción -->
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" id="submitBtn">💾 Guardar Libro</button>
                 <a href="index.php" class="btn btn-secondary">✖️ Cancelar</a>
             </div>
         </form>
 
+        <!-- Pie de página con nota sobre campos obligatorios -->
         <div class="form-footer">
             <p>* Los campos marcados con asterisco son obligatorios</p>
         </div>
     </div>
 
     <script>
+        // Obtiene referencias a los elementos del formulario
         const form = document.getElementById('bookForm');
         const titleInput = document.getElementById('title');
         const authorInput = document.getElementById('author');
         const yearInput = document.getElementById('year');
         const genreInput = document.getElementById('genre');
 
-        // Funciones de validación
+        // Valida el título: obligatorio, 3-255 caracteres
         function validateTitle(value) {
             if (value.trim().length === 0) {
                 return { valid: false, message: '❌ El título es obligatorio' };
@@ -206,6 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return { valid: true, message: '✅ Título válido' };
         }
 
+        // Valida el autor: obligatorio, 3-255 caracteres
         function validateAuthor(value) {
             if (value.trim().length === 0) {
                 return { valid: false, message: '❌ El autor es obligatorio' };
@@ -217,6 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return { valid: true, message: '✅ Autor válido' };
         }
 
+        // Valida el año: opcional, pero si se proporciona debe estar entre 1000 y año actual + 10
         function validateYear(value) {
             const currentYear = new Date().getFullYear();
             const maxYear = currentYear + 10;
@@ -232,6 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return { valid: true, message: '✅ Año válido' };
         }
 
+        // Valida el género: opcional, pero máximo 100 caracteres
         function validateGenre(value) {
             if (value.length > 100) {
                 return { valid: false, message: '❌ El género no puede exceder 100 caracteres' };
@@ -239,17 +257,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return { valid: true, message: value.length === 0 ? 'Opcional' : '✅ Género válido' };
         }
 
-        // Función para actualizar estado de input
+        // Actualiza visualmente el estado del input (colores y mensajes de error)
         function updateFieldStatus(input, validation) {
             const errorElement = document.getElementById(`${input.id}-error`);
             const helpElement = document.getElementById(`${input.id}-help`);
 
             if (validation.valid) {
+                // Si es válido: verde, oculta error, muestra ayuda
                 input.classList.remove('input-error');
                 input.classList.add('input-valid');
                 errorElement.textContent = '';
                 helpElement.style.display = 'block';
             } else {
+                // Si es inválido: rojo, muestra error, oculta ayuda
                 input.classList.add('input-error');
                 input.classList.remove('input-valid');
                 errorElement.textContent = validation.message;
@@ -257,48 +277,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Validación en tiempo real
+        // Valida título mientras el usuario escribe
         titleInput.addEventListener('input', function() {
             const validation = validateTitle(this.value);
             updateFieldStatus(this, validation);
         });
 
+        // Valida autor mientras el usuario escribe
         authorInput.addEventListener('input', function() {
             const validation = validateAuthor(this.value);
             updateFieldStatus(this, validation);
         });
 
+        // Valida año mientras el usuario escribe
         yearInput.addEventListener('input', function() {
             const validation = validateYear(this.value);
             updateFieldStatus(this, validation);
         });
 
+        // Valida género mientras el usuario escribe
         genreInput.addEventListener('input', function() {
             const validation = validateGenre(this.value);
             updateFieldStatus(this, validation);
         });
 
-        // Validación al enviar formulario
+        // Valida todos los campos al enviar el formulario
         form.addEventListener('submit', function(e) {
             const titleValidation = validateTitle(titleInput.value);
             const authorValidation = validateAuthor(authorInput.value);
             const yearValidation = validateYear(yearInput.value);
             const genreValidation = validateGenre(genreInput.value);
 
+            // Actualiza estado visual de todos los campos
             updateFieldStatus(titleInput, titleValidation);
             updateFieldStatus(authorInput, authorValidation);
             updateFieldStatus(yearInput, yearValidation);
             updateFieldStatus(genreInput, genreValidation);
 
+            // Si hay errores, previene envío y desplaza a los errores
             if (!titleValidation.valid || !authorValidation.valid || !yearValidation.valid || !genreValidation.valid) {
                 e.preventDefault();
                 document.querySelector('.alert-danger')?.scrollIntoView({ behavior: 'smooth' });
             }
         });
 
-        // Limpiar estados de validación y clases CSS cuando se carga la página después de éxito
+        // Al cargar la página, limpia clases CSS y valida campos si tienen valores
         window.addEventListener('load', function() {
-            // Si el formulario está vacío (después de éxito), limpiar las clases
+            // Si el formulario está vacío (después de éxito), limpia las clases de validación
             if (titleInput.value === '' && authorInput.value === '') {
                 titleInput.classList.remove('input-valid', 'input-error');
                 authorInput.classList.remove('input-valid', 'input-error');
@@ -306,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 genreInput.classList.remove('input-valid', 'input-error');
             }
             
-            // Validar al cargar la página si hay valores
+            // Valida campos al cargar si contienen valores (ej: después de error de servidor)
             if (titleInput.value) updateFieldStatus(titleInput, validateTitle(titleInput.value));
             if (authorInput.value) updateFieldStatus(authorInput, validateAuthor(authorInput.value));
             if (yearInput.value) updateFieldStatus(yearInput, validateYear(yearInput.value));
